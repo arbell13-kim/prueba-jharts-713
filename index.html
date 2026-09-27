@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<<title>JHARTS — Tu acompañante</title>
+<<link <link rel="manifest" href="manifest.webmanifest">
+<style>
+  :root{
+    --accent:#6a3fa8; --accent2:#8a5fd0;
+    --bg:#e9e4f2; --bg2:#ffffff; --text:#2b2440; --muted:#7a7390;
+    --bubble:#dcd3ec; --bubble2:#6a3fa8; --border:#d9cff0;
+    --header:#6a3fa8; --headerText:#fff;
+  }
+  [data-theme="dark"]{
+    --bg:#17121f; --bg2:#221a30; --text:#e8e3f5; --muted:#9a93b0;
+    --bubble:#3a2f52; --bubble2:#7b5bd6; --border:#3a2f52;
+    --header:#1d1629; --headerText:#e8e3f5;
+  }
+  [data-theme="dark"][data-color="morado"]{ --header:#1d1629; --headerText:#e8e3f5; }
+  [data-color="verde"]  { --accent:#2e9e5b; --bubble2:#2e9e5b; --header:#2e9e5b; }
+  [data-color="azul"]   { --accent:#2f6fd8; --bubble2:#2f6fd8; --header:#2f6fd8; }
+  [data-color="rojo"]   { --accent:#d84343; --bubble2:#d84343; --header:#d84343; }
+  [data-color="rosa"]   { --accent:#e05aa8; --bubble2:#e05aa8; --header:#e05aa8; }
+  [data-color="naranja"]{ --accent:#e07b2f; --bubble2:#e07b2f; --header:#e07b2f; }
+  [data-color="amarillo"]{--accent:#d9a520; --bubble2:#d9a520; --header:#d9a520; }
+  [data-color="negro"]  { --accent:#3a3a42; --bubble2:#3a3a42; --header:#3a3a42; }
+
+  *{box-sizing:border-box}
+  body{font-family:system-ui,sans-serif;margin:0;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column}
+  header{background:var(--header);color:var(--headerText);text-align:center;padding:10px 14px;position:relative}
+  header h1{font-size:19px;margin:0;letter-spacing:1px}
+  header .lema{font-size:11.5px;opacity:.92;margin:2px 0 0}
+  #configBtn{position:absolute;top:8px;right:10px;background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:5px 9px;font-size:13px;cursor:pointer}
+
+  main{flex:1;display:flex;flex-direction:column;overflow:hidden;padding-top:4px}
+  #chat{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:9px;position:relative;background:var(--bg);background-size:cover;background-position:center;background-repeat:no-repeat}
+  .msg{max-width:78%;padding:9px 13px;border-radius:14px;line-height:1.5;font-size:14.5px;position:relative;z-index:1}
+  .user{align-self:flex-end;background:var(--bubble);color:var(--text)}
+  .jhar{background:var(--bubble2);color:#fff;align-self:flex-start}
+  .jhar .nivel{display:inline-block;font-size:11.5px;background:rgba(255,255,255,.22);border-radius:9px;padding:1px 7px;margin-bottom:3px}
+  #inputbar{display:flex;gap:6px;align-items:center;padding:9px 14px;background:var(--bg2);border-top:1px solid var(--border)}
+  #input{flex:1;border:1px solid var(--border);border-radius:22px;padding:10px 14px;font-size:14.5px;background:var(--bg2);color:var(--text)}
+  .crisisBtn{background:var(--accent);color:#fff;border:none;border-radius:50%;width:42px;height:42px;font-size:18px;cursor:pointer;flex-shrink:0}
+  #send{background:var(--accent);color:#fff;border:none;border-radius:50%;width:42px;height:42px;font-size:18px;cursor:pointer;flex-shrink:0}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:50}
+  .modal .box{background:var(--bg2);color:var(--text);border-radius:18px;padding:22px;max-width:420px;width:90%;max-height:85%;overflow-y:auto}
+  .modal h2{color:var(--accent);margin-top:0}
+  .modal button{background:var(--accent);color:#fff;border:none;border-radius:12px;padding:10px 15px;font-size:14.5px;cursor:pointer}
+  .modal .cancel{background:transparent;color:var(--text);border:1px solid var(--border)}
+  .steps .step{display:block;margin:7px 0;padding:9px;border:1px solid var(--border);border-radius:10px}
+  .steps .step b{color:var(--accent)}
+  .feel button{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:9px 13px;font-size:14px;cursor:pointer;margin:4px}
+  .ubicacionBtn{position:fixed;bottom:78px;right:14px;background:var(--accent);color:#fff;border:none;border-radius:50%;width:42px;height:42px;font-size:18px;cursor:pointer;z-index:40;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+  .tooltip{position:fixed;bottom:122px;right:14px;background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:8px 12px;font-size:12.5px;display:none;z-index:41;max-width:220px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+
+  #vistaAjustes{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);color:var(--text);display:none;flex-direction:column;z-index:80}
+  #vistaAjustes .ajHeader{background:var(--header);color:var(--headerText);padding:12px 14px;display:flex;align-items:center;gap:10px}
+  #vistaAjustes .ajHeader h2{margin:0;font-size:17px;flex:1}
+  #vistaAjustes .ajHeader button{background:transparent;color:var(--headerText);border:1px solid rgba(255,255,255,.4);border-radius:8px;padding:5px 10px;font-size:13px;cursor:pointer}
+  #vistaAjustes .ajBody{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+  #vistaAjustes .seccion{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px}
+  #vistaAjustes label{font-size:13px;color:var(--muted);display:block;margin-top:4px}
+  #vistaAjustes select,#vistaAjustes button{background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px;font-size:14px;cursor:pointer;width:100%;margin:4px 0}
+  input[type=file]{display:none}
+  #quitarFotoBtn{display:none}
+  @media (max-width: 480px){
+  #inputbar{flex-wrap:wrap}
+  .crisisBtn,#send{width:38px;height:38px}
+  #input{min-width:0;flex:1}
+}
+</style>
+</head>
+<body data-theme="light" data-color="morado">
+
+<header>
+  <h1>🎧 JHARTS</h1>
+  <p class="lema" id="lema">No sustituyo a las personas, te ayudo a llegar a ellas</p>
+  <button id="configBtn" onclick="abrirAjustes()">⚙️</button>
+</header>
+
+<main>
+  <div id="chat">
+    <div class="msg jhar"><span class="nivel">🟢</span><span id="saludo">Hola, soy JHARTS. Estoy aquí para escucharte, sin juzgar. ¿Cómo te sientes hoy?</span></div>
+  </div>
+  <div id="inputbar">
+    <button class="crisisBtn" onclick="emergencia1()" title="Necesito ayuda">🆘</button>
+    <button class="crisisBtn" onclick="panico()" title="Ataque de pánico">😰</button>
+    <input id="input" placeholder="..." onkeydown="if(event.key==='Enter')enviar()">
+    <button id="send" onclick="enviar()">➤</button>
+  </div>
+</main>
+
+<button class="ubicacionBtn" onclick="toggleUbicacion()" title="Centros de ayuda">📍</button>
+<div class="tooltip" id="tooltipUbicacion">Centros de ayuda cercanos. Activa tu ubicación para ver los más cercanos a ti.</div>
+
+<div class="modal" id="modEmerg">
+  <div class="box">
+    <h2>🆘 <span id="tEmerg">Necesito ayuda</span></h2>
+    <p id="emergText">¿Necesitas solicitar ayuda inmediata? <b>Pulsa nuevamente para confirmar.</b></p>
+    <button onclick="emergencia2()"><span id="btnConfirmar">Confirmar ayuda</span></button>
+    <button class="cancel" onclick="cerrar('modEmerg')"><span id="btnCancelar">Cancelar</span></button>
+  </div>
+</div>
+
+<div class="modal" id="modPanico">
+  <div class="box">
+    <h2>😰 <span id="tPanico">Estoy aquí contigo</span></h2>
+    <div class="steps" id="pasos">
+      <div class="step"><b>1.</b> <span id="p1">Si puedes, siéntate en un lugar seguro.</span></div>
+      <div class="step"><b>2.</b> <span id="p2">Mira a tu alrededor y dime 5 cosas que puedas ver.</span></div>
+      <div class="step"><b>3.</b> <span id="p3">Apoya los pies en el suelo. Siente el contacto.</span></div>
+      <div class="step"><b>4.</b> <span id="p4">Respira lento: 4 segundos adentro, 6 afuera.</span></div>
+      <div class="step"><b>5.</b> <span id="p5">Sigue conmigo los próximos 60 segundos. No necesitas hacerlo perfecto.</span></div>
+    </div>
+    <div class="feel" id="feel" style="display:none">
+      <p id="qFeel">¿Cómo te sientes ahora?</p>
+      <button onclick="sentir('mejor')">🟢 <span id="fMejor">Un poco mejor</span></button>
+      <button onclick="sentir('igual')">🟡 <span id="fIgual">Igual</span></button>
+      <button onclick="sentir('peor')">🔴 <span id="fPeor">Está empeorando</span></button>
+    </div>
+    <button id="btnPlay" onclick="reproducirAudio()">▶ <span id="btnReproducir">Reproducir</span></button>
+    <button class="cancel" onclick="cerrar('modPanico')"><span id="btnCerrar">Cerrar</span></button>
+  </div>
+</div>
+
+<div id="vistaAjustes">
+  <div class="ajHeader">
+    <h2>⚙️ <span id="ajTitulo">Ajustes</span></h2>
+    <button onclick="cerrarAjustes()" id="btnVolver">Volver</button>
+  </div>
+  <div class="ajBody">
+    <div class="seccion">
+      <label id="lColor">Color</label>
+      <select id="colorSel"></select>
+      <label id="lTema">Tema visual</label>
+      <select id="temaSel"></select>
+      <label id="lIdioma">Idioma</label>
+      <select id="langSel"><option value="es">🇪🇸 Español</option><option value="en">🇬🇧 English</option></select>
+      <label id="lModo">Modo</label>
+      <button id="themeBtn">🌙 Oscuro</button>
+    </div>
+    <div class="seccion">
+      <label id="lFondo">Imagen de fondo</label>
+      <button id="fotoFondoBtn">🖼️ Elegir imagen</button>
+      <input type="file" id="fotoFondo" accept="image/*">
+      <label id="lAjusteFondo">Cómo se ve la imagen</label>
+      <select id="ajusteFondo">
+        <option value="cover">✨ Cubrir (llena, recorta)</option>
+        <option value="contain">🖼️ Ajustar (se ve completa)</option>
+        <option value="stretch">⬛ Estirar</option>
+      </select>
+      <button id="quitarFotoBtn">✖ Quitar imagen</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const chat=document.getElementById('chat');
+const input=document.getElementById('input');
+
+const SEÑALES={
+  alta:["suicid","matarme","acabar con mi vida","no quiero vivir","hacerme daño","lastimarme","desaparecer para siempre","quiero morir","me voy a matar"],
+  moderada:["no aguanto","no soporto","desesperad","no tiene sentido","nada me importa","quiero desaparecer","atrapad","no puedo más","no quiero despertar"],
+  baja:["triste","solo","sola","estresad","ansios","preocupad","agotad","cansad","abrumad","me siento mal"]
+};
+const EMERGENCIA=["me voy a matar ahora","tengo una pistola","ya tomé pastillas","me estoy haciendo daño ahora","estoy en el puente","ya no hay vuelta atrás"];
+
+const NOMBRES_COLOR={morado:"Morado",verde:"Verde",azul:"Azul",rojo:"Rojo",rosa:"Rosa",naranja:"Naranja",amarillo:"Amarillo",negro:"Negro"};
+const NOMBRES_TEMA={musica:"🎵 Música",deporte:"⚽ Deporte",dibujos:"🎨 Dibujos",libros:"📚 Libros",flores:"🌸 Flores"};
+
+const T={
+  es:{
+    lema:"No sustituyo a las personas, te ayudo a llegar a ellas",
+    saludo:"Hola, soy JHARTS. Estoy aquí para escucharte, sin juzgar. ¿Cómo te sientes hoy?",
+    tEmerg:"Necesito ayuda",
+    emerg1:"¿Necesitas solicitar ayuda inmediata? <b>Pulsa nuevamente para confirmar.</b>",
+    emerg2:"⚠️ Pulsa <b>Confirmar ayuda</b> una vez más para activar el protocolo.",
+    emerg3:"Protocolo de emergencia activado.<br><br>• Emergencias: <b>911</b><br>• Línea de la Vida: <b>800 911 2000</b><br><br><i>JHARTS solo muestra recursos reales. Si se integra envío de ubicación o aviso a un contacto de confianza, se ejecutará aquí.</i>",
+    btnConfirmar:"Confirmar ayuda", btnCancelar:"Cancelar", tPanico:"Estoy aquí contigo",
+    p1:"Si puedes, siéntate en un lugar seguro.", p2:"Mira a tu alrededor y dime 5 cosas que puedas ver.",
+    p3:"Apoya los pies en el suelo. Siente el contacto.", p4:"Respira lento: 4 segundos adentro, 6 afuera.",
+    p5:"Sigue conmigo los próximos 60 segundos. No necesitas hacerlo perfecto.",
+    qFeel:"¿Cómo te sientes ahora?", fMejor:"Un poco mejor", fIgual:"Igual", fPeor:"Está empeorando",
+    btnReproducir:"Reproducir", btnPausar:"Pausar", btnCerrar:"Cerrar",
+    lColor:"Color", lTema:"Tema visual", lIdioma:"Idioma", lModo:"Modo",
+    lFondo:"Imagen de fondo", fotoFondo:"🖼️ Elegir imagen", quitarFoto:"✖ Quitar imagen",
+    lAjusteFondo:"Cómo se ve la imagen", opCubrir:"✨ Cubrir (llena, recorta)", opAjustar:"🖼️ Ajustar (se ve completa)", opEstirar:"⬛ Estirar",
+    ayudaTxt:"Centros de ayuda cercanos", ayudaBtn:"Activar ubicación", ayudaTitulo:"Centros de ayuda cercanos",
+    ayudaVacio:"Activa tu ubicación para ver los centros de ayuda más cercanos a ti.", ayudaCerrar:"Cerrar",
+    ajTitulo:"Ajustes", btnVolver:"Volver",
+    colores:NOMBRES_COLOR, temas:NOMBRES_TEMA,
+    r1:"Estás en peligro inmediato y esto es importante. No estás solo/a. Por favor llama ahora a emergencias (911) o a la Línea de la Vida 800 911 2000.",
+    r2:"Lo que me cuentas me preocupa mucho y quiero tomarlo en serio. ¿Estás a salvo en este momento? ¿Has pensado en hacerte daño hoy? ¿Tienes a alguien de confianza a quien puedas llamar? Te recomiendo hablar con un profesional: Línea de la Vida 800 911 2000.",
+    sMejor:"Me alegra mucho. 💚 Descansa un momento, ya pasó lo más fuerte.",
+    sIgual:"Está bien. Repitamos la respiración una vez más, sin prisa.",
+    sPeor:"Está bien, sigamos juntos. Vamos a repetir la respiración y después te muestro cómo pedir ayuda."
+  },
+  en:{
+    lema:"I don't replace people, I help you reach them",
+    saludo:"Hi, I'm JHARTS. I'm here to listen, without judging. How are you feeling today?",
+    tEmerg:"I need help",
+    emerg1:"Do you need immediate help? <b>Press again to confirm.</b>",
+    emerg2:"⚠️ Press <b>Confirm help</b> once more to activate the protocol.",
+    emerg3:"Emergency protocol activated.<br><br>• Emergency: <b>911</b><br>• Lifeline: <b>800 911 2000</b><br><br><i>JHARTS only shows real resources. If location sharing or trusted-contact alerts are integrated, they will run here.</i>",
+    btnConfirmar:"Confirm help", btnCancelar:"Cancel", tPanico:"I'm here with you",
+    p1:"If you can, sit in a safe place.", p2:"Look around and name 5 things you can see.",
+    p3:"Press your feet into the floor. Feel the contact.", p4:"Breathe slowly: 4 seconds in, 6 out.",
+    p5:"Stay with me for the next 60 seconds. You don't need to do it perfectly.",
+    qFeel:"How do you feel now?", fMejor:"A bit better", fIgual:"The same", fPeor:"Getting worse",
+    btnReproducir:"Play", btnPausar:"Pause", btnCerrar:"Close",
+    lColor:"Color", lTema:"Theme", lIdioma:"Language", lModo:"Mode",
+    lFondo:"Background image", fotoFondo:"🖼️ Choose image", quitarFoto:"✖ Remove image",
+    lAjusteFondo:"How the image looks", opCubrir:"✨ Cover (fills, crops)", opAjustar:"🖼️ Fit (see it fully)", opEstirar:"⬛ Stretch",
+    ayudaTxt:"Nearby help centers", ayudaBtn:"Enable location", ayudaTitulo:"Nearby help centers",
+    ayudaVacio:"Enable your location to see the nearest help centers.", ayudaCerrar:"Close",
+    ajTitulo:"Settings", btnVolver:"Back",
+    colores:{morado:"Purple",verde:"Green",azul:"Blue",rojo:"Red",rosa:"Pink",naranja:"Orange",amarillo:"Yellow",negro:"Black"},
+    temas:{musica:"🎵 Music",deporte:"⚽ Sports",dibujos:"🎨 Drawing",libros:"📚 Books",flores:"🌸 Flowers"},
+    r1:"You are in immediate danger and this matters. You are not alone. Please call emergency services (911) or the Lifeline 800 911 2000 right now.",
+    r2:"What you're telling me worries me and I want to take it seriously. Are you safe right now? Have you thought about hurting yourself today? Is there someone you trust you can call? I recommend talking to a professional: Lifeline 800 911 2000.",
+    sMejor:"I'm really glad. 💚 Rest for a moment, the hardest part is over.",
+    sIgual:"That's okay. Let's do the breathing once more, no rush.",
+    sPeor:"That's okay, let's stay together. Let's repeat the breathing and then I'll show you how to ask for help."
+  }
+};
+
+let lang='es';
+function L(k){return T[lang][k]||k;}
+
+function llenarSelects(){
+  const cs=document.getElementById('colorSel');
+  cs.innerHTML='';
+  for(const v in T[lang].colores){
+    const o=document.createElement('option');
+    o.value=v; o.textContent=T[lang].colores[v]; cs.appendChild(o);
+  }
+  cs.value=document.body.dataset.color;
+  const ts=document.getElementById('temaSel');
+  ts.innerHTML='';
+  for(const v in T[lang].temas){
+    const o=document.createElement('option');
+    o.value=v; o.textContent=T[lang].temas[v]; ts.appendChild(o);
+  }
+}
+
+function aplicarIdioma(){
+  document.getElementById('lema').textContent=L('lema');
+  document.getElementById('saludo').textContent=L('saludo');
+  document.getElementById('tEmerg').textContent=L('tEmerg');
+  document.getElementById('btnConfirmar').textContent=L('btnConfirmar');
+  document.getElementById('btnCancelar').textContent=L('btnCancelar');
+  document.getElementById('tPanico').textContent=L('tPanico');
+  document.getElementById('p1').textContent=L('p1');
+  document.getElementById('p2').textContent=L('p2');
+  document.getElementById('p3').textContent=L('p3');
+  document.getElementById('p4').textContent=L('p4');
+  document.getElementById('p5').textContent=L('p5');
+  document.getElementById('qFeel').textContent=L('qFeel');
+  document.getElementById('fMejor').textContent=L('fMejor');
+  document.getElementById('fIgual').textContent=L('fIgual');
+  document.getElementById('fPeor').textContent=L('fPeor');
+  document.getElementById('btnReproducir').textContent=L('btnReproducir');
+  document.getElementById('btnCerrar').textContent=L('btnCerrar');
+  document.getElementById('lColor').textContent=L('lColor');
+  document.getElementById('lTema').textContent=L('lTema');
+  document.getElementById('lIdioma').textContent=L('lIdioma');
+  document.getElementById('lModo').textContent=L('lModo');
+  document.getElementById('lFondo').textContent=L('lFondo');
+  document.getElementById('fotoFondoBtn').textContent=L('fotoFondo');
+  document.getElementById('quitarFotoBtn').textContent=L('quitarFoto');
+  document.getElementById('lAjusteFondo').textContent=L('lAjusteFondo');
+  const af=document.getElementById('ajusteFondo');
+  af.options[0].textContent=L('opCubrir');
+  af.options[1].textContent=L('opAjustar');
+  af.options[2].textContent=L('opEstirar');
+  document.getElementById('ajTitulo').textContent=L('ajTitulo');
+  document.getElementById('btnVolver').textContent=L('btnVolver');
+  document.getElementById('emergText').innerHTML=L('emerg1');
+  llenarSelects();
+  actualizarBotonModo();
+}
+
+function actualizarBotonModo(){
+  const d=document.body.dataset.theme;
+  const b=document.getElementById('themeBtn');
+  b.textContent=(d==='dark')?(lang==='en'?'☀️ Light':'☀️ Claro'):(lang==='en'?'🌙 Dark':'🌙 Oscuro');
+}
+
+function clasificar(t){
+  t=t.toLowerCase();
+  if(EMERGENCIA.some(f=>t.includes(f))) return "🔴";
+  if(SEÑALES.alta.some(f=>t.includes(f))) return "🟠";
+  if(SEÑALES.moderada.some(f=>t.includes(f))) return "🟡";
+  return "🟢";
+}
+
+const TEMAS={
+  soledad:{
+    pistas:["solo","sola","aisl","solitari","nadie me escucha","sin amigos","no tengo a nadie","me siento invisible","estando sola","estar solo","nadie me entiende"],
+    respuestas:[
+      "Sentirse solo/a aunque haya gente alrededor pesa mucho. Ese espacio que eliges también es tuyo, pero no tienes que habitarlo siempre en silencio. ¿Hay alguien con quien puedas escribirte hoy, aunque sea un mensaje corto?",
+      "La soledad que eliges a veces es refugio, y a veces se vuelve jaula. ¿Qué necesitaría pasar para que ese tiempo a solas se sienta como descanso y no como vacío?",
+      "Aislarse puede ser una forma de protegerse, y también cansar muchísimo. ¿Cuándo fue la última vez que estar con alguien se sintió bien?"
+    ]
+  },
+  llanto:{
+    pistas:["llorar","lloro","llore","llorando","quiero llorar","ganas de llorar","no puedo dejar de llorar"],
+    respuestas:[
+      "Llorar no es debilidad, es tu cuerpo soltando algo que llevaba demasiado tiempo adentro. Está bien que salga. ¿Hay algo en particular que esté desbordándote hoy?",
+      "Si tienes ganas de llorar todo el tiempo, es señal de que estás sosteniendo mucho. No tienes que explicarlo todo ahora. Solo quiero que sepas que estoy aquí mientras lo sacas.",
+      "Las ganas de llorar constante suelen ser cansancio acumulado. Si puedes, déjalo salir sin juzgarte. Y después dime qué es lo que más te está doliendo."
+    ]
+  },
+  tristeza:{
+    pistas:["triste","deprimid","melancol","me siento mal","estoy mal","tengo el ánimo bajo","no tengo ganas de nada"],
+    respuestas:[
+      "La tristeza también es una visita legítima, no un fallo tuyo. ¿Desde cuándo la sientes más fuerte? A veces ponerle fecha ayuda a verla con más claridad.",
+      "Siento que hoy pesa. No tienes que estar bien ni fingirlo. ¿Qué te ha ayudado antes en días así, aunque sea un poquito?",
+      "Estar triste no significa que estés roto/a. ¿Qué es lo que más echo de menos o lo que más me duele hoy? Cuéntamelo con calma."
+    ]
+  },
+  mejora:{
+    pistas:["me senti mejor","me siento mejor","mejor","me alegra","feliz","content","bien","genial","perfect","excelente","tranquil","en paz","motivad","emocionad","a gusto","me hizo bien","me senti bien"],
+    respuestas:[
+      "Qué bueno que ese paseo te hizo bien. 💚 A veces un cambio de aire sí mueve algo. ¿Qué fue lo que más te ayudó de ese momento?",
+      "Me alegra escucharlo. 🎉 ¿Qué parte de ese día te gustaría repetir más seguido?",
+      "Eso se nota y se siente bien. 😊 ¿Qué te gustaría hacer para cuidar esa sensación?"
+    ]
+  },
+  amistad:{
+    pistas:["amigo","amiga","amigos","mi amigo","mi amiga","un amigo","una amiga","compañero","compañera"],
+    respuestas:[
+      "Qué bonito que alguien te llevara de paseo. Esas personas que aparecen cuando más las necesitas valen oro. ¿Cómo te sentiste con él/ella?",
+      "Ese amigo/a te vio y actuó. Eso dice mucho de ti también: hay quien te quiere cerca. ¿Sueles permitirte recibir ese tipo de cuidado?"
+    ]
+  }
+};
+
+let ultTema={};
+function elegir(arr,clave){
+  let i=Math.floor(Math.random()*arr.length);
+  if(arr.length>1&&i===ultTema[clave]) i=(i+1)%arr.length;
+  ultTema[clave]=i;
+  return arr[i];
+}
+
+function detectarTema(t){
+  t=t.toLowerCase();
+  let mejor=null, mejorN=0;
+  for(const k in TEMAS){
+    let n=0;
+    for(const p of TEMAS[k].pistas){ if(t.includes(p)) n++; }
+    if(n>mejorN){ mejorN=n; mejor=k; }
+  }
+  return mejor;
+}
+
+function responder(t){
+  const nivel=clasificar(t);
+  if(nivel==="🔴") return L('r1');
+  if(nivel==="🟠") return L('r2');
+  if(nivel==="🟡"){
+    const tema=detectarTema(t);
+    if(tema&&TEMAS[tema].respuestas.length) return elegir(TEMAS[tema].respuestas,tema);
+    return elegir([
+      "Gracias por compartir esto conmigo. Suena a que estás pasando un momento muy pesado. ¿Hay alguien de confianza con quien puedas hablar?",
+      "Te agradezco que me lo cuentes. Cargar esto solo pesa mucho. ¿Con quién podrías contar hoy?"
+    ],'z');
+  }
+  const tema=detectarTema(t);
+  if(tema&&TEMAS[tema].respuestas.length) return elegir(TEMAS[tema].respuestas,tema);
+  return elegir([
+    "Te escucho. Cuéntame un poco más de eso, sin prisa.",
+    "Entiendo. Estoy aquí, dime qué más está pasando.",
+    "Gracias por contármelo. ¿Cómo te deja eso hoy?"
+  ],'n');
+}
+
+function añadir(nivel,texto){
+  const d=document.createElement('div');
+  d.className='msg jhar';
+  d.innerHTML='<span class="nivel">'+nivel+'</span>'+texto;
+  chat.appendChild(d);
+  chat.scrollTop=chat.scrollHeight;
+}
+
+function enviar(){
+  const t=input.value.trim();
+  if(!t) return;
+  const u=document.createElement('div');
+  u.className='msg user';
+  u.textContent=t;
+  chat.appendChild(u);
+  input.value='';
+  chat.scrollTop=chat.scrollHeight;
+  setTimeout(()=>añadir(clasificar(t),responder(t)),400);
+}
+
+let pulsaciones=0;
+function emergencia1(){
+  pulsaciones++;
+  document.getElementById('modEmerg').style.display='flex';
+  document.getElementById('emergText').innerHTML=L('emerg1');
+}
+function emergencia2(){
+  if(pulsaciones<2){
+    document.getElementById('emergText').innerHTML=L('emerg2');
+    return;
+  }
+  document.getElementById('modEmerg').style.display='none';
+  añadir("🔴",L('emerg3'));
+}
+
+let audio=null;
+function reproducirAudio(){
+  if(!audio){ audio=new Audio('panico.mp3'); }
+  if(audio.paused){
+    audio.play();
+    document.getElementById('btnPlay').innerHTML='⏸ <span id="btnReproducir">'+L('btnPausar')+'</span>';
+  }else{
+    audio.pause();
+    document.getElementById('btnPlay').innerHTML='▶ <span id="btnReproducir">'+L('btnReproducir')+'</span>';
+  }
+}
+function panico(){
+  if(audio){ audio.pause(); audio.currentTime=0; }
+  document.getElementById('btnPlay').innerHTML='▶ <span id="btnReproducir">'+L('btnReproducir')+'</span>';
+  document.getElementById('modPanico').style.display='flex';
+  document.getElementById('pasos').style.display='block';
+  document.getElementById('feel').style.display='none';
+}
+function sentir(r){
+  const m={mejor:'sMejor',igual:'sIgual',peor:'sPeor'};
+  if(audio){ audio.pause(); audio.currentTime=0; }
+  document.getElementById('btnPlay').innerHTML='▶ <span id="btnReproducir">'+L('btnReproducir')+'</span>';
+  document.getElementById('modPanico').style.display='none';
+  añadir("🟢",L(m[r]));
+}
+function cerrar(id){
+  if(id==='modPanico'&&audio){ audio.pause(); audio.currentTime=0; }
+  document.getElementById('btnPlay').innerHTML='▶ <span id="btnReproducir">'+L('btnReproducir')+'</span>';
+  document.getElementById(id).style.display='none';
+}
+
+function abrirAjustes(){
+  document.getElementById('vistaAjustes').style.display='flex';
+  llenarSelects();
+}
+function cerrarAjustes(){
+  document.getElementById('vistaAjustes').style.display='none';
+}
+
+document.getElementById('colorSel').onchange=function(){
+  document.body.dataset.color=this.value;
+};
+document.getElementById('temaSel').onchange=function(){
+  document.body.dataset.tema=this.value;
+};
+document.getElementById('langSel').onchange=function(){
+  lang=this.value;
+  aplicarIdioma();
+};
+document.getElementById('themeBtn').onclick=function(){
+  document.body.dataset.theme=(document.body.dataset.theme==='dark')?'light':'dark';
+  actualizarBotonModo();
+};
+document.getElementById('fotoFondoBtn').onclick=function(){
+  document.getElementById('fotoFondo').click();
+};
+document.getElementById('fotoFondo').onchange=function(){
+  const f=this.files[0];
+  if(!f) return;
+  const r=new FileReader();
+  r.onload=function(){
+    document.getElementById('chat').style.backgroundImage='url('+r.result+')';
+    const c=document.getElementById('chat');
+    const modo=document.getElementById('ajusteFondo').value;
+    c.style.backgroundSize=(modo==='contain')?'contain':(modo==='stretch')?'100% 100%':'cover';
+    c.style.backgroundPosition='center';
+    c.style.backgroundRepeat='no-repeat';
+    document.getElementById('quitarFotoBtn').style.display='inline-block';
+  };
+  r.readAsDataURL(f);
+};
+document.getElementById('ajusteFondo').onchange=function(){
+  const c=document.getElementById('chat');
+  const v=this.value;
+  c.style.backgroundSize=(v==='contain')?'contain':(v==='stretch')?'100% 100%':'cover';
+};
+document.getElementById('quitarFotoBtn').onclick=function(){
+  document.getElementById('chat').style.backgroundImage='';
+  this.style.display='none';
+};
+document.getElementById('configBtn').onclick=abrirAjustes;
+
+function toggleUbicacion(){
+  const t=document.getElementById('tooltipUbicacion');
+  t.style.display=(t.style.display==='block')?'none':'block';
+}
+
+aplicarIdioma();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
+</script>
+</body>
+</html>
