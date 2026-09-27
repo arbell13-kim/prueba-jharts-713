@@ -1,0 +1,26 @@
+{
+  "name": "JHARTS - Tu acompañante",
+  "short_name": "JHARTS",
+  "description": "Acompañamiento empático. No sustituyo a las personas, te ayudo a llegar a ellas.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#6a3fa8",
+  "theme_color": "#6a3fa8",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "icons/icono-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icono-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
